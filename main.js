@@ -419,4 +419,144 @@ window.addEventListener('scroll', () => {
   progressBar.style.width = pct + '%';
 }, { passive: true });
 
+/* ============================================================
+   GOLD SPARKLE CURSOR TRAIL
+   ============================================================ */
+const sparkleCanvas = $('#sparkleCanvas');
+const sCtx = sparkleCanvas.getContext('2d');
+let sparkles = [];
+
+function resizeSparkle() {
+  sparkleCanvas.width = window.innerWidth;
+  sparkleCanvas.height = window.innerHeight;
+}
+resizeSparkle();
+window.addEventListener('resize', resizeSparkle);
+
+function spawnSparkle(x, y) {
+  const count = 5;
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.6 + Math.random() * 1.4;
+    sparkles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 1.2,
+      size: 1.5 + Math.random() * 2.5,
+      alpha: 0.9,
+      decay: 0.018 + Math.random() * 0.014,
+    });
+  }
+}
+
+let lastSparkleX = 0, lastSparkleY = 0;
+document.addEventListener('mousemove', e => {
+  const dx = e.clientX - lastSparkleX;
+  const dy = e.clientY - lastSparkleY;
+  if (Math.hypot(dx, dy) > 8) {
+    spawnSparkle(e.clientX, e.clientY);
+    lastSparkleX = e.clientX;
+    lastSparkleY = e.clientY;
+  }
+});
+
+function animateSparkles() {
+  sCtx.clearRect(0, 0, sparkleCanvas.width, sparkleCanvas.height);
+  sparkles = sparkles.filter(s => s.alpha > 0.01);
+  for (const s of sparkles) {
+    s.x += s.vx;
+    s.y += s.vy;
+    s.vy += 0.05; // gentle gravity
+    s.alpha -= s.decay;
+    sCtx.beginPath();
+    sCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+    sCtx.fillStyle = `rgba(201,169,110,${s.alpha.toFixed(3)})`;
+    sCtx.fill();
+  }
+  raf(animateSparkles);
+}
+raf(animateSparkles);
+
+/* ============================================================
+   AMBIENT HERO FLOATING PARTICLES
+   ============================================================ */
+(function initHeroParticles() {
+  const container = $('#heroParticles');
+  if (!container) return;
+  const count = 22;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'hero-particle';
+    const size = 1.5 + Math.random() * 2.5;
+    const dur = 7 + Math.random() * 10;
+    const delay = -(Math.random() * dur);
+    const maxop = (0.2 + Math.random() * 0.5).toFixed(2);
+    p.style.cssText = `
+      left:${(Math.random() * 100).toFixed(1)}%;
+      bottom:${(Math.random() * 55).toFixed(1)}%;
+      width:${size.toFixed(1)}px;
+      height:${size.toFixed(1)}px;
+      --dur:${dur.toFixed(1)}s;
+      --delay:${delay.toFixed(1)}s;
+      --maxop:${maxop};
+    `;
+    container.appendChild(p);
+  }
+})();
+
+/* ============================================================
+   DRAGGABLE HORIZONTAL REEL
+   ============================================================ */
+(function initReel() {
+  const reel = $('#reelTrack');
+  if (!reel) return;
+
+  let isDown = false;
+  let startX, scrollLeft;
+  let velX = 0, lastX = 0, rafId;
+
+  reel.addEventListener('mousedown', e => {
+    isDown = true;
+    reel.style.scrollBehavior = 'auto';
+    startX = e.pageX - reel.offsetLeft;
+    scrollLeft = reel.scrollLeft;
+    lastX = e.pageX;
+    velX = 0;
+    cancelAnimationFrame(rafId);
+    e.preventDefault();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!isDown) return;
+    isDown = false;
+    // Momentum / inertia
+    (function momentum() {
+      velX *= 0.93;
+      reel.scrollLeft -= velX;
+      if (Math.abs(velX) > 0.5) rafId = raf(momentum);
+    })();
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    const x = e.pageX - reel.offsetLeft;
+    const walk = (x - startX) * 1.4;
+    velX = e.pageX - lastX;
+    lastX = e.pageX;
+    reel.scrollLeft = scrollLeft - walk;
+  });
+
+  // Touch
+  let touchStartX = 0, touchScrollLeft = 0;
+  reel.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchScrollLeft = reel.scrollLeft;
+  }, { passive: true });
+  reel.addEventListener('touchmove', e => {
+    const dx = touchStartX - e.touches[0].clientX;
+    reel.scrollLeft = touchScrollLeft + dx;
+  }, { passive: true });
+})();
+
 console.log('✦ Mehak Tomar Portfolio — Initialized');
+

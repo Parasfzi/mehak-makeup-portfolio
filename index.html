@@ -34,6 +34,9 @@
   <div class="cursor" id="cursor"></div>
   <div class="cursor-follower" id="cursorFollower"></div>
 
+  <!-- ===== SPARKLE CANVAS ===== -->
+  <canvas id="sparkleCanvas"></canvas>
+
   <!-- ===== LOADER ===== -->
   <div class="loader" id="loader">
     <div class="loader-inner">
@@ -92,6 +95,8 @@
         </svg>
       </a>
     </div>
+    <!-- Ambient floating particles -->
+    <div class="hero-particles" id="heroParticles"></div>
     <div class="hero-scroll-indicator" id="scrollIndicator">
       <div class="scroll-line"></div>
       <span>Scroll</span>
@@ -120,6 +125,63 @@
       <span>Events</span><span class="dot">·</span>
     </div>
   </div>
+
+  <!-- ===== CINEMATIC REEL ===== -->
+  <section class="reel-section">
+    <div class="reel-header reveal">
+      <p class="section-eyebrow">The Reel</p>
+      <h2 class="section-title">A Glimpse of the Work</h2>
+    </div>
+    <div class="reel-track-wrapper">
+      <div class="reel-track" id="reelTrack">
+        <div class="reel-item">
+          <img src="images/hero_portrait_1773045419714.png" alt="Smoky drama" loading="lazy" />
+          <div class="reel-item-overlay"><span>Smoky Drama</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/bridal_look_1_1773045438108.png" alt="Bridal glow" loading="lazy" />
+          <div class="reel-item-overlay"><span>Bridal Glow</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/editorial_look_1_1773045452475.png" alt="Chrome editorial" loading="lazy" />
+          <div class="reel-item-overlay"><span>Chrome Edit.</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/party_look_1_1773045469357.png" alt="Night glam" loading="lazy" />
+          <div class="reel-item-overlay"><span>Night Glam</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/fashion_look_1_1773045499409.png" alt="Holographic" loading="lazy" />
+          <div class="reel-item-overlay"><span>Holographic</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/bridal_look_2_1773045570917.png" alt="Romantic bride" loading="lazy" />
+          <div class="reel-item-overlay"><span>Romantic Bride</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/editorial_look_2_1773045586021.png" alt="Dark romance" loading="lazy" />
+          <div class="reel-item-overlay"><span>Dark Romance</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/fashion_look_2_1773045601786.png" alt="Runway ready" loading="lazy" />
+          <div class="reel-item-overlay"><span>Runway Ready</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/featured_work_1_1773045618732.png" alt="Floral artistry" loading="lazy" />
+          <div class="reel-item-overlay"><span>Floral Artistry</span></div>
+        </div>
+        <div class="reel-item">
+          <img src="images/party_look_2_1773047547598.png" alt="Glam evening" loading="lazy" />
+          <div class="reel-item-overlay"><span>Glam Evening</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="reel-hint">
+      <div class="reel-hint-line"></div>
+      <span>Drag to explore</span>
+      <div class="reel-hint-line"></div>
+    </div>
+  </section>
 
   <!-- ===== FEATURED WORK ===== -->
   <section class="featured" id="featured">

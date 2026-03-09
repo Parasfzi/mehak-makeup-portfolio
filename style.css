@@ -1736,3 +1736,341 @@ section {
     opacity: 1;
   }
 }
+
+/* ============================================================
+   ✦ DESIGN ENHANCEMENTS — Paras Pawar
+   ============================================================ */
+
+/* --- 1. HEADING SHIMMER SWEEP -------------------------------- */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg,
+      transparent 0%,
+      rgba(201, 169, 110, 0.35) 50%,
+      transparent 100%);
+  transform: skewX(-20deg);
+  animation: shimmerSweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmerSweep {
+  0% {
+    left: -75%;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  50% {
+    left: 125%;
+    opacity: 1;
+  }
+
+  51% {
+    opacity: 0;
+  }
+
+  100% {
+    left: 125%;
+    opacity: 0;
+  }
+}
+
+/* --- 2. HERO NAME GOLD GLOW ---------------------------------- */
+.hero-name em {
+  text-shadow:
+    0 0 40px rgba(201, 169, 110, 0.5),
+    0 0 80px rgba(201, 169, 110, 0.2);
+  animation: nameGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes nameGlow {
+  from {
+    text-shadow: 0 0 30px rgba(201, 169, 110, 0.4), 0 0 60px rgba(201, 169, 110, 0.15);
+  }
+
+  to {
+    text-shadow: 0 0 60px rgba(201, 169, 110, 0.7), 0 0 120px rgba(201, 169, 110, 0.3);
+  }
+}
+
+/* --- 3. GLASSMORPHISM TESTIMONIAL CARDS --------------------- */
+.testimonials {
+  background: linear-gradient(135deg, #0f0f0f 0%, #161212 50%, #0f0f0f 100%);
+}
+
+.testi-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(201, 169, 110, 0.15);
+  border-radius: 16px;
+  padding: clamp(28px, 4vw, 48px);
+  margin: 0 8px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.4s, box-shadow 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+
+.testi-card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 169, 110, 0.6), transparent);
+}
+
+.testi-card:hover {
+  border-color: rgba(201, 169, 110, 0.35);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(201, 169, 110, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.testi-track-wrapper {
+  max-width: 860px;
+}
+
+/* --- 4. BUTTON PULSE GLOW ----------------------------------- */
+.hero-btn:hover,
+.btn-gold:hover,
+.nav-cta:hover,
+.btn-outline:hover {
+  box-shadow: 0 0 24px rgba(201, 169, 110, 0.45), 0 0 48px rgba(201, 169, 110, 0.15);
+}
+
+.btn-gold {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease;
+}
+
+.btn-gold:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* --- 5. SPARKLE CANVAS LAYER -------------------------------- */
+#sparkleCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9997;
+}
+
+/* --- 6. HORIZONTAL IMAGE REEL ------------------------------- */
+.reel-section {
+  background: var(--bg);
+  padding: clamp(60px, 10vh, 100px) 0;
+  overflow: hidden;
+}
+
+.reel-header {
+  text-align: center;
+  padding: 0 clamp(24px, 6vw, 80px);
+  margin-bottom: 40px;
+}
+
+.reel-track-wrapper {
+  position: relative;
+  cursor: grab;
+  user-select: none;
+}
+
+.reel-track-wrapper:active {
+  cursor: grabbing;
+}
+
+.reel-track-wrapper::before,
+.reel-track-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(40px, 6vw, 80px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.reel-track-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.reel-track-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.reel-track {
+  display: flex;
+  gap: 16px;
+  padding: 0 clamp(40px, 6vw, 80px) 12px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.reel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.reel-item {
+  flex: 0 0 auto;
+  width: clamp(220px, 28vw, 340px);
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reel-item:hover {
+  transform: scale(1.03) translateY(-6px);
+}
+
+.reel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.reel-item:hover img {
+  transform: scale(1.08);
+}
+
+.reel-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 55%);
+  display: flex;
+  align-items: flex-end;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.reel-item:hover .reel-item-overlay {
+  opacity: 1;
+}
+
+.reel-item-overlay span {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--white);
+  transform: translateY(8px);
+  transition: transform 0.4s;
+}
+
+.reel-item:hover .reel-item-overlay span {
+  transform: translateY(0);
+}
+
+.reel-hint {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--white-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.reel-hint-line {
+  width: 32px;
+  height: 1px;
+  background: var(--white-muted);
+  animation: reelPulse 2s ease-in-out infinite;
+}
+
+@keyframes reelPulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scaleX(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleX(1.4);
+  }
+}
+
+/* --- 7. AMBIENT FLOATING PARTICLES (hero) ------------------- */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.hero-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  animation: particleFloat var(--dur, 8s) var(--delay, 0s) ease-in-out infinite;
+}
+
+@keyframes particleFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+
+  20% {
+    opacity: var(--maxop, 0.6);
+  }
+
+  80% {
+    opacity: var(--maxop, 0.6);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-120px) scale(1.2);
+  }
+}
