@@ -401,4 +401,19 @@ const statObserver = new IntersectionObserver(entries => {
 }, { threshold: 0.5 });
 statNums.forEach(el => statObserver.observe(el));
 
-console.log('✦ Sophia Laurent Portfolio — Initialized');
+/* ============================================================
+   SCROLL PROGRESS BAR
+   ============================================================ */
+const progressBar = document.createElement('div');
+progressBar.id = 'scrollProgress';
+progressBar.style.cssText = 'position:fixed;top:0;left:0;height:2px;background:var(--gold);z-index:10001;width:0%;transition:width 0.1s linear;pointer-events:none;';
+document.body.appendChild(progressBar);
+
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  progressBar.style.width = pct + '%';
+}, { passive: true });
+
+console.log('✦ Mehak Tomar Portfolio — Initialized');
