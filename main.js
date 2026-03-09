@@ -1,6 +1,9 @@
 /* ============================================================
-   SOPHIA LAURENT — Makeup Artist Portfolio
+   MEHAK TOMAR — Makeup Artist Portfolio
    main.js
+
+   Designed & Developed by: Paras Pawar
+   © 2026 All rights reserved
    ============================================================ */
 
 'use strict';
