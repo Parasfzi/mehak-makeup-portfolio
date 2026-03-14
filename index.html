@@ -34,13 +34,21 @@
   <div class="cursor" id="cursor"></div>
   <div class="cursor-follower" id="cursorFollower"></div>
 
-  <!-- ===== SPARKLE CANVAS ===== -->
+  <!-- Global 3D Background Canvas -->
+  <canvas class="webgl-bg" id="bg3D"></canvas>
+
+  <!-- ===== NAVIGATION ===== -->
   <canvas id="sparkleCanvas"></canvas>
 
   <!-- ===== LOADER ===== -->
   <div class="loader" id="loader">
-    <div class="loader-inner">
-      <div class="loader-logo">MT</div>
+    <div class="loader-half loader-left">
+      <div class="loader-logo-half">M</div>
+    </div>
+    <div class="loader-half loader-right">
+      <div class="loader-logo-half">T</div>
+    </div>
+    <div class="loader-bar-wrapper">
       <div class="loader-bar">
         <div class="loader-progress"></div>
       </div>
@@ -78,7 +86,7 @@
 
   <!-- ===== HERO ===== -->
   <section class="hero" id="home">
-    <div class="hero-bg" id="heroBg" style="background-image: url('images/hero_portrait_1773045419714.png');"></div>
+    <div class="hero-bg" id="heroBg" style="background-image: url('images/hero_portrait_1773045419714.png');" fetchpriority="high"></div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <p class="hero-tagline reveal-text" data-delay="0">Crafting Beauty, One Brushstroke at a Time</p>
@@ -86,8 +94,8 @@
         <span>Mehak</span>
         <em>Tomar</em>
       </h1>
-      <p class="hero-sub reveal-text" data-delay="400">Makeup Artist &nbsp;·&nbsp; Sambhal</p>
-      <a href="#portfolio" class="hero-btn reveal-text" data-delay="600">
+      <p class="hero-sub reveal-text">Crafting stunning looks emphasizing natural radiance and editorial precision.</p>
+      <a href="#featured" class="btn-gold reveal-btn" data-magnetic>
         <span>View Portfolio</span>
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M2 8H14M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
@@ -132,6 +140,20 @@
       <p class="section-eyebrow">The Reel</p>
       <h2 class="section-title">A Glimpse of the Work</h2>
     </div>
+
+    <div class="reel-nav">
+      <button class="reel-btn reel-prev hidden" id="reelPrev" aria-label="Scroll left">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="reel-btn reel-next" id="reelNext" aria-label="Scroll right">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
     <div class="reel-track-wrapper">
       <div class="reel-track" id="reelTrack">
         <div class="reel-item">
@@ -190,19 +212,19 @@
       <h2 class="section-title">Featured Work</h2>
     </div>
     <div class="featured-grid">
-      <div class="featured-card large reveal-card" data-lightbox="featured_work_1_1773045618732.png">
-        <img src="images/featured_work_1_1773045618732.png" alt="Floral eye art makeup editorial" loading="lazy" />
+      <div class="featured-card large reveal-card" data-lightbox="featured_work_1_1773045618732.png" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+        <img src="images/featured_work_1_1773045618732.png" alt="Editorial Makeup Design - Floral Petal Eyelid Art" loading="lazy" decoding="async" />
         <div class="featured-overlay">
           <span>Floral Artistry</span>
         </div>
       </div>
       <div class="featured-side">
-        <div class="featured-card reveal-card" data-delay="100" data-lightbox="editorial_look_1_1773045452475.png">
-          <img src="images/editorial_look_1_1773045452475.png" alt="Editorial chrome makeup" loading="lazy" />
+        <div class="featured-card reveal-card" data-delay="100" data-lightbox="editorial_look_1_1773045452475.png" data-tilt data-tilt-max="8" data-tilt-speed="400">
+          <img src="images/editorial_look_1_1773045452475.png" alt="Avant-Garde Chrome Editorial Makeup Look" loading="lazy" decoding="async" />
           <div class="featured-overlay"><span>Chrome Editorial</span></div>
         </div>
-        <div class="featured-card reveal-card" data-delay="200" data-lightbox="fashion_look_1_1773045499409.png">
-          <img src="images/fashion_look_1_1773045499409.png" alt="Fashion holographic makeup" loading="lazy" />
+        <div class="featured-card reveal-card" data-delay="200" data-lightbox="fashion_look_1_1773045499409.png" data-tilt data-tilt-max="8" data-tilt-speed="400">
+          <img src="images/fashion_look_1_1773045499409.png" alt="High-Fashion Prism Photography Makeup" loading="lazy" decoding="async" />
           <div class="featured-overlay"><span>Holographic Fantasy</span></div>
         </div>
       </div>
@@ -360,12 +382,9 @@
           </div>
         </div>
         <div class="col-grid">
-          <div class="col-img-wrap reveal-card"><img src="images/bridal_look_1_1773045438108.png" alt="Bridal look 1"
-              loading="lazy" /></div>
-          <div class="col-img-wrap reveal-card"><img src="images/bridal_look_2_1773045570917.png" alt="Bridal look 2"
-              loading="lazy" /></div>
-          <div class="col-img-wrap reveal-card"><img src="images/bridal_look_3_1773047565915.png" alt="Bridal portrait"
-              loading="lazy" /></div>
+          <div class="col-img-wrap reveal-card"><img src="images/bridal_look_1_1773045438108.png" alt="Bridal Look 1 - Radiant Skin" loading="lazy" decoding="async" /></div>
+          <div class="col-img-wrap reveal-card"><img src="images/bridal_look_2_1773045570917.png" alt="Bridal Look 2 - Traditional Glamour" loading="lazy" decoding="async" /></div>
+          <div class="col-img-wrap reveal-card"><img src="images/bridal_look_3_1773047565915.png" alt="Bridal Look 3 - Minimalistic Elegance" loading="lazy" decoding="async" /></div>
         </div>
       </div>
 
@@ -438,7 +457,7 @@
   <section class="about" id="about">
     <div class="about-inner">
       <div class="about-img-wrap reveal-card">
-        <img src="images/artist_portrait_1773045546098.png" alt="Mehak Tomar, Makeup Artist" />
+        <img src="images/artist_portrait_1773045546098.png" alt="Mehak Tomar - Award Winning Makeup Artist Portfolio Portrait" loading="lazy" decoding="async" />
         <div class="about-img-accent"></div>
       </div>
       <div class="about-text">
@@ -660,6 +679,12 @@
     <div class="lb-counter" id="lbCounter">1 / 9</div>
   </div>
 
+  <!-- Smooth Scroll Library -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.34/dist/lenis.min.js"></script>
+  <!-- 3D & Advanced Interaction Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+  
   <script src="main.js"></script>
 </body>
 

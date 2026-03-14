@@ -16,6 +16,30 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const raf = requestAnimationFrame;
 
 /* ============================================================
+   SMOOTH SCROLLING (LENIS)
+   ============================================================ */
+let lenis;
+if (typeof Lenis !== 'undefined') {
+  lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // https://www.desmos.com/calculator/brs54l4xou
+    direction: 'vertical',
+    gestureDirection: 'vertical',
+    smooth: true,
+    mouseMultiplier: 1,
+    smoothTouch: false,
+    touchMultiplier: 2,
+    infinite: false,
+  });
+
+  function rafLenis(time) {
+    lenis.raf(time);
+    requestAnimationFrame(rafLenis);
+  }
+  requestAnimationFrame(rafLenis);
+}
+
+/* ============================================================
    LOADER
    ============================================================ */
 window.addEventListener('load', () => {
@@ -25,6 +49,11 @@ window.addEventListener('load', () => {
     document.body.style.overflow = '';
     // Trigger hero animations
     animateHero();
+    
+    // Remove loader from DOM entirely after its transition
+    setTimeout(() => {
+      if (loader) loader.remove();
+    }, 1200);
   }, 2000);
 });
 document.body.style.overflow = 'hidden';
@@ -41,15 +70,14 @@ let followerX = 0, followerY = 0;
 document.addEventListener('mousemove', e => {
   mouseX = e.clientX;
   mouseY = e.clientY;
-  cursor.style.left = mouseX + 'px';
-  cursor.style.top = mouseY + 'px';
+  // Use transform for better performance (GPU accelerated)
+  cursor.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
 });
 
 function animateFollower() {
   followerX += (mouseX - followerX) * 0.1;
   followerY += (mouseY - followerY) * 0.1;
-  cursorFollower.style.left = followerX + 'px';
-  cursorFollower.style.top = followerY + 'px';
+  cursorFollower.style.transform = `translate3d(${followerX}px, ${followerY}px, 0)`;
   raf(animateFollower);
 }
 raf(animateFollower);
@@ -96,14 +124,23 @@ $$('[data-close]', mobileMenu).forEach(link => {
 
 // Active nav link based on scroll
 const sections = $$('section[id]');
+let sectionOffsets = [];
+
+function cacheSectionOffsets() {
+  sectionOffsets = sections.map(sec => ({
+    id: sec.id,
+    top: sec.offsetTop,
+    bottom: sec.offsetTop + sec.offsetHeight
+  }));
+}
+cacheSectionOffsets();
+window.addEventListener('resize', cacheSectionOffsets);
+
 function updateActiveNav() {
   const scrollY = window.scrollY + 120;
-  sections.forEach(sec => {
-    const top = sec.offsetTop;
-    const bottom = top + sec.offsetHeight;
-    const id = sec.id;
-    const link = $(`.nav-link[href="#${id}"]`);
-    if (link) link.classList.toggle('active', scrollY >= top && scrollY < bottom);
+  sectionOffsets.forEach(sec => {
+    const link = $(`.nav-link[href="#${sec.id}"]`);
+    if (link) link.classList.toggle('active', scrollY >= sec.top && scrollY < sec.bottom);
   });
 }
 
@@ -132,8 +169,10 @@ window.addEventListener('scroll', () => {
   if (!ticking) {
     raf(() => {
       const scrolled = window.scrollY;
-      if (heroBg && scrolled < window.innerHeight) {
-        heroBg.style.transform = `translateY(${scrolled * 0.35}px) scale(1.08)`;
+      const vh = window.innerHeight;
+      if (heroBg && scrolled < vh) {
+        // Use translate3d for better performance
+        heroBg.style.transform = `translate3d(0, ${scrolled * 0.35}px, 0) scale(1.08)`;
       }
       ticking = false;
     });
@@ -168,9 +207,9 @@ if (baSlider && baBefore && baHandle) {
   function setSliderPosition(x) {
     const rect = baSlider.getBoundingClientRect();
     let pct = (x - rect.left) / rect.width;
-    pct = Math.max(0.02, Math.min(0.98, pct));
-    baBefore.style.width = (pct * 100) + '%';
-    baHandle.style.left = (pct * 100) + '%';
+    pct = Math.max(0.005, Math.min(0.995, pct));
+    // Use CSS variable for smoother, decoupled updates
+    baSlider.style.setProperty('--pos', (pct * 100) + '%');
   }
 
   // Mouse events
@@ -302,7 +341,9 @@ testiCards.forEach((_, i) => {
 
 function goToTesti(index) {
   testiCurrent = (index + testiTotal) % testiTotal;
-  testiTrack.style.transform = `translateX(-${testiCurrent * 100}%)`;
+  // Account for flex track width by calculating offset dynamically based on one card's width
+  const movePercentage = (testiCurrent * 100) / testiTotal;
+  testiTrack.style.transform = `translateX(-${movePercentage}%)`;
   testiTrack.style.transition = 'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)';
   $$('.testi-dot', testiDotsContainer).forEach((d, i) => d.classList.toggle('active', i === testiCurrent));
 }
@@ -357,8 +398,13 @@ $$('a[href^="#"]').forEach(anchor => {
     if (target) {
       e.preventDefault();
       const offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 72;
-      const top = target.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
+      
+      if (lenis) {
+        lenis.scrollTo(target, { offset: -offset });
+      } else {
+        const top = target.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
     }
   });
 });
@@ -509,54 +555,187 @@ raf(animateSparkles);
    ============================================================ */
 (function initReel() {
   const reel = $('#reelTrack');
+  const btnPrev = $('#reelPrev');
+  const btnNext = $('#reelNext');
   if (!reel) return;
 
+  // Button logic
+  const updateButtons = () => {
+    if (!btnPrev || !btnNext) return;
+    const maxScroll = reel.scrollWidth - reel.clientWidth;
+    btnPrev.classList.toggle('hidden', reel.scrollLeft <= 10);
+    btnNext.classList.toggle('hidden', reel.scrollLeft >= maxScroll - 10);
+  };
+
+  reel.addEventListener('scroll', updateButtons);
+  window.addEventListener('resize', updateButtons);
+  setTimeout(updateButtons, 100);
+
+  if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+      reel.scrollBy({ left: -reel.clientWidth * 0.6, behavior: 'smooth' });
+    });
+  }
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      reel.scrollBy({ left: reel.clientWidth * 0.6, behavior: 'smooth' });
+    });
+  }
+
+  // Mouse Drag Logic
   let isDown = false;
   let startX, scrollLeft;
   let velX = 0, lastX = 0, rafId;
 
-  reel.addEventListener('mousedown', e => {
-    isDown = true;
-    reel.style.scrollBehavior = 'auto';
-    startX = e.pageX - reel.offsetLeft;
-    scrollLeft = reel.scrollLeft;
-    lastX = e.pageX;
-    velX = 0;
-    cancelAnimationFrame(rafId);
-    e.preventDefault();
-  });
+  const wrapper = $('.reel-track-wrapper');
+  if (wrapper) {
+    wrapper.addEventListener('mousedown', e => {
+      isDown = true;
+      reel.style.scrollBehavior = 'auto';
+      startX = e.pageX - reel.offsetLeft;
+      scrollLeft = reel.scrollLeft;
+      lastX = e.pageX;
+      velX = 0;
+      cancelAnimationFrame(rafId);
+      e.preventDefault();
+    });
 
-  window.addEventListener('mouseup', () => {
-    if (!isDown) return;
-    isDown = false;
-    // Momentum / inertia
-    (function momentum() {
-      velX *= 0.93;
-      reel.scrollLeft -= velX;
-      if (Math.abs(velX) > 0.5) rafId = raf(momentum);
-    })();
-  });
+    window.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      // Momentum / inertia
+      (function momentum() {
+        velX *= 0.93;
+        reel.scrollLeft -= velX;
+        if (Math.abs(velX) > 0.5) rafId = raf(momentum);
+      })();
+    });
 
-  window.addEventListener('mousemove', e => {
-    if (!isDown) return;
-    const x = e.pageX - reel.offsetLeft;
-    const walk = (x - startX) * 1.4;
-    velX = e.pageX - lastX;
-    lastX = e.pageX;
-    reel.scrollLeft = scrollLeft - walk;
-  });
+    window.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      const x = e.pageX - reel.offsetLeft;
+      const walk = (x - startX) * 1.4;
+      velX = e.pageX - lastX;
+      lastX = e.pageX;
+      reel.scrollLeft = scrollLeft - walk;
+    });
+  }
 
-  // Touch
+  // Touch Drag Logic
   let touchStartX = 0, touchScrollLeft = 0;
   reel.addEventListener('touchstart', e => {
     touchStartX = e.touches[0].clientX;
     touchScrollLeft = reel.scrollLeft;
+    velX = 0;
+    cancelAnimationFrame(rafId);
   }, { passive: true });
+  
   reel.addEventListener('touchmove', e => {
     const dx = touchStartX - e.touches[0].clientX;
     reel.scrollLeft = touchScrollLeft + dx;
+    velX = 0; 
   }, { passive: true });
 })();
 
-console.log('✦ Mehak Tomar Portfolio — Initialized');
+/* ============================================================
+   ADVANCED INTERACTIONS (TILT & MAGNETIC)
+   ============================================================ */
+// Initialize VanillaTilt for Portfolio Gallery Items
+if (typeof VanillaTilt !== 'undefined') {
+  const tiltItems = document.querySelectorAll('.pg-item');
+  if (tiltItems.length) {
+    VanillaTilt.init(tiltItems, {
+      max: 8,
+      speed: 400,
+      glare: true,
+      "max-glare": 0.2
+    });
+  }
+}
 
+// Magnetic Buttons Logic
+const magneticEls = document.querySelectorAll('[data-magnetic]');
+magneticEls.forEach(el => {
+  el.addEventListener('mousemove', e => {
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    el.style.transform = `translate(${x * 0.3}px, ${y * 0.5}px)`;
+  });
+
+  el.addEventListener('mouseleave', () => {
+    el.style.transform = `translate(0px, 0px)`;
+  });
+});
+
+/* ============================================================
+   GLOBAL 3D BACKGROUND (THREE.JS)
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.querySelector("#bg3D");
+    if (!canvas || typeof THREE === 'undefined') return;
+
+    // 1. Setup Scene, Camera, Renderer
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog('#0f0f0f', 5, 15);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 8);
+
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // 2. Create Luxury 3D Object (Torus Knot)
+    const geometry = new THREE.TorusKnotGeometry(2, 0.5, 128, 32);
+    const material = new THREE.MeshStandardMaterial({
+        color: 0xc9a96e, metalness: 0.8, roughness: 0.2, wireframe: false,
+    });
+    const torusKnot = new THREE.Mesh(geometry, material);
+    scene.add(torusKnot);
+
+    // 3. Lighting setup for dramatic cinematic feel
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xfff6e5, 1);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+    const pointLight2 = new THREE.PointLight(0xc9a96e, 0.8);
+    pointLight2.position.set(-5, -5, 5);
+    scene.add(pointLight2);
+
+    // 4. Parallax effect based on mouse/scroll
+    let mouseX = 0, mouseY = 0, scrollY = 0;
+    window.addEventListener("mousemove", (event) => {
+        mouseX = (event.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = -(event.clientY / window.innerHeight - 0.5) * 2;
+    });
+    window.addEventListener("scroll", () => { scrollY = window.scrollY; });
+    window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+
+    // 5. Animation Loop
+    const clock = new THREE.Clock();
+    const tick = () => {
+        const elapsedTime = clock.getElapsedTime();
+        torusKnot.rotation.y = elapsedTime * 0.1;
+        torusKnot.rotation.x = elapsedTime * 0.15;
+        torusKnot.position.y = Math.sin(elapsedTime * 0.5) * 0.3;
+        
+        torusKnot.position.x += (mouseX * 0.5 - torusKnot.position.x) * 0.05;
+        torusKnot.position.y += (mouseY * 0.5 - torusKnot.position.y) * 0.05;
+        
+        // Push object back on scroll
+        torusKnot.position.z = - (scrollY * 0.002);
+        
+        renderer.render(scene, camera);
+        window.requestAnimationFrame(tick);
+    };
+    tick();
+});
+
+console.log('✦ Mehak Tomar Portfolio — Initialized');

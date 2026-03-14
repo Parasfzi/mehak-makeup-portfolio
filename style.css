@@ -22,6 +22,22 @@
   --radius: 4px;
   --transition: 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --nav-h: 72px;
+  --container-max: 1440px;
+  --container-ultra: 1920px;
+  --space-unit: clamp(1rem, 1.2vw, 1.5rem);
+  --h1-size: clamp(3rem, 8vw, 7rem);
+}
+
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-unit);
+}
+
+@media (min-width: 2000px) {
+  .container {
+    max-width: var(--container-ultra);
+  }
 }
 
 /* ---- RESET & BASE ---- */
@@ -34,18 +50,25 @@
 }
 
 html {
-  scroll-behavior: smooth;
   font-size: 16px;
+  /* Removed scroll-behavior: smooth; for Lenis compatibility */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 body {
+  margin: 0;
   background: var(--bg);
   color: var(--white);
   font-family: var(--font-sans);
   font-weight: 300;
   line-height: 1.7;
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
   cursor: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 img {
@@ -97,9 +120,10 @@ button {
   background: var(--gold);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+  z-index: 10000;
+  will-change: transform;
+  transform: translate3d(-50%, -50%, 0);
+  transition: width 0.3s, height 0.3s, background 0.3s;
 }
 
 .cursor-follower {
@@ -111,8 +135,9 @@ button {
   border: 1px solid var(--gold);
   border-radius: 50%;
   pointer-events: none;
-  z-index: 9998;
-  transform: translate(-50%, -50%);
+  z-index: 9999;
+  will-change: transform;
+  transform: translate3d(-50%, -50%, 0);
   transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), width 0.3s, height 0.3s, opacity 0.3s;
   opacity: 0.6;
 }
@@ -128,48 +153,107 @@ button {
   opacity: 0.3;
 }
 
+#cursorFollower.hover {
+  width: 40px;
+  height: 40px;
+  background-color: var(--gold-dim);
+  border-color: transparent;
+}
+
+/* ============================================================
+   GLOBAL 3D BACKGROUND
+   ============================================================ */
+.webgl-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.25; /* Keep it subtle and elegant */
+}
+
 /* ============================================================
    LOADER
    ============================================================ */
 .loader {
   position: fixed;
   inset: 0;
-  background: var(--bg);
   z-index: 10000;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.8s, visibility 0.8s;
+  pointer-events: all;
 }
 
 .loader.hidden {
-  opacity: 0;
-  visibility: hidden;
   pointer-events: none;
 }
 
-.loader-inner {
+.loader-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: var(--bg);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 24px;
+  transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
+  will-change: transform;
 }
 
-.loader-logo {
+.loader-left {
+  left: 0;
+  justify-content: flex-end;
+  border-right: 1px solid rgba(201, 169, 110, 0.05);
+}
+
+.loader-right {
+  right: 0;
+  justify-content: flex-start;
+}
+
+.loader.hidden .loader-left {
+  transform: translateX(-100%);
+}
+
+.loader.hidden .loader-right {
+  transform: translateX(100%);
+}
+
+.loader-logo-half {
   font-family: var(--font-serif);
-  font-size: 2.5rem;
+  font-size: clamp(3rem, 8vw, 5rem);
   color: var(--gold);
-  letter-spacing: 0.25em;
   opacity: 0;
   animation: fadeIn 0.5s 0.2s forwards;
 }
 
+/* Offset the letters slightly so they look like one word when closed */
+.loader-left .loader-logo-half {
+  margin-right: -4px;
+}
+.loader-right .loader-logo-half {
+  margin-left: -4px;
+}
+
+.loader-bar-wrapper {
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.4s;
+  z-index: 2;
+}
+
+.loader.hidden .loader-bar-wrapper {
+  opacity: 0;
+}
+
 .loader-bar {
-  width: 180px;
+  width: 200px;
   height: 1px;
   background: rgba(201, 169, 110, 0.2);
   overflow: hidden;
-  border-radius: 1px;
 }
 
 .loader-progress {
@@ -180,15 +264,11 @@ button {
 }
 
 @keyframes loadBar {
-  to {
-    width: 100%;
-  }
+  to { width: 100%; }
 }
 
 @keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
+  to { opacity: 1; }
 }
 
 /* ============================================================
@@ -365,7 +445,7 @@ button {
   background-position: center top;
   background-repeat: no-repeat;
   will-change: transform;
-  transform: scale(1.08);
+  transform: translate3d(0, 0, 0) scale(1.08); /* Initial state for parallax */
 }
 
 .hero-overlay {
@@ -608,6 +688,144 @@ button {
 }
 
 /* ============================================================
+   CINEMATIC REEL
+   ============================================================ */
+.reel-section {
+  background: var(--bg);
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.reel-header {
+  padding: clamp(60px, 8vh, 100px) clamp(24px, 5vw, 64px) 40px;
+  text-align: center;
+}
+
+.reel-nav {
+  position: absolute;
+  top: 55%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(8px, 2vw, 24px);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.reel-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(15, 15, 15, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 1;
+  visibility: visible;
+}
+
+.reel-btn:hover {
+  background: var(--gold);
+  color: var(--bg);
+  border-color: var(--gold);
+  transform: scale(1.1);
+}
+
+.reel-btn.hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.reel-track-wrapper {
+  overflow: hidden;
+  cursor: grab;
+}
+
+.reel-track-wrapper:active {
+  cursor: grabbing;
+}
+
+.reel-track {
+  display: flex;
+  gap: 20px;
+  padding: 0 clamp(24px, 5vw, 64px) 60px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch;
+}
+
+.reel-track::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.reel-item {
+  flex: 0 0 clamp(280px, 35vw, 420px);
+  aspect-ratio: 16/10;
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.reel-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 60%);
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.reel-item:hover .reel-item-overlay {
+  opacity: 1;
+}
+
+.reel-item-overlay span {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  color: var(--white);
+  font-style: italic;
+  transform: translateY(10px);
+  transition: transform 0.4s;
+}
+
+.reel-item:hover .reel-item-overlay span {
+  transform: translateY(0);
+}
+
+.reel-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-bottom: clamp(60px, 8vh, 100px);
+}
+
+.reel-hint-line {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.reel-hint span {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--white-muted);
+}
+
+/* ============================================================
    SHARED SECTION STYLES
    ============================================================ */
 section {
@@ -818,6 +1036,7 @@ section {
   aspect-ratio: 3/4;
   overflow: hidden;
   border-radius: 8px;
+  --pos: 50%; /* Position variable updated by JS */
 }
 
 .ba-after,
@@ -828,8 +1047,9 @@ section {
 }
 
 .ba-before {
-  width: 50%;
+  width: var(--pos);
   border-right: 2px solid rgba(255, 255, 255, 0.8);
+  will-change: width;
 }
 
 .ba-before img,
@@ -862,12 +1082,13 @@ section {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 50%;
+  left: var(--pos);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: col-resize;
+  will-change: left;
 }
 
 .ba-handle-line {
@@ -1431,21 +1652,34 @@ section {
   background: var(--bg-3);
   color: var(--white);
 }
-
 .btn-gold {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: var(--gold);
-  color: var(--bg);
-  padding: 16px 32px;
-  border-radius: var(--radius);
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  gap: 12px;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 14px 32px;
+  border-radius: 40px;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  font-weight: 500;
-  transition: background 0.3s, transform 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-gold::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--gold);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 0;
 }
 
 .btn-gold:hover {
